@@ -38,3 +38,19 @@ export const fetchShakepayRates = createAsyncThunk(
     }
   }
 )
+
+export const fetchActualBTCRates = createAsyncThunk(
+  'netWorth/fetchActualBTCRates',
+  async () => {
+    const response = await axios.get(`https://shakepay.github.io/programming-exercise/web/rates_CAD_BTC.json`);
+    return response.data;
+  }
+)
+
+export const fetchActualETHRates = createAsyncThunk(
+  'netWorth/fetchActualETHRates',
+  async () => {
+    const response = await axios.get(`https://shakepay.github.io/programming-exercise/web/rates_CAD_ETH.json`);
+    return response.data;
+  }
+)

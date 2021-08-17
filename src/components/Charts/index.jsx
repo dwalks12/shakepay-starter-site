@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import { format, isSameDay } from 'date-fns';
 import { useSelector } from 'react-redux';
-import { selectRates, selectTransactionHistory } from '../../store/NetWorth/selectors';
+import { selectActualBtcRates, selectActualEthRates, selectRates, selectTransactionHistory } from '../../store/NetWorth/selectors';
 import styles from './Chart.module.scss';
 import { CAD_NetWorth } from '../../helpers/helpers';
 import { useAppDispatch } from '../../store';
 import { setCurrentNetWorth } from '../../store/NetWorth/reducer';
 
-const testOptions = {
+const options = {
   maintainAspectRatio: true,
   legend: {
     display: false,
@@ -56,49 +56,16 @@ const testOptions = {
   },
 };
 
-const lineOptions = {
-  scales: {
-    xAxes: [
-      {
-        type: 'time',
-        time: {
-          unit: 'day',
-          tooltipFormat: 'lll',
-        },
-        ticks: {
-          maxTicksLimit: 12,
-        },
-      },
-    ],
-    yAxes: [
-      {
-        stacked: true,
-        gridLines: {
-          display: false,
-        },
-        ticks: {
-          suggestedMin: 100,
-          suggestedMax: 0,
-        },
-      },
-    ],
-  },
-  legend: {
-    display: false,
-  },
-  tooltips: {
-    enabled: true,
-  },
-};
-
-const Charts = () => {
+const Charts = ({ realTimeData = false, id = "netWorthChart" }) => {
   const dispatch = useAppDispatch();
   const transactionHistory = useSelector((state) => selectTransactionHistory(state));
   const rates = useSelector((state) => selectRates(state));
-  const [data, setData] = useState({});
+  const ethRates = useSelector((state) => selectActualEthRates(state));
+  const btcRates = useSelector((state) => selectActualBtcRates(state));
 
+  const [data, setData] = useState({});
   useEffect(() => {
-    if (transactionHistory && rates) {
+    if (transactionHistory && rates && ethRates && btcRates) {
       // Starting from the very beginning. Calculate net worth
       let lastCADAmount = 0;
       let lastBTCAmount = 0;
@@ -133,15 +100,17 @@ const Charts = () => {
               lastETHAmount += data.to.amount;
               break;
           }
-
+          const actualBTCValOnDate = btcRates.filter((value) => isSameDay(new Date(value.createdAt), new Date(data.createdAt)));
+          const actualETHValOnDate = ethRates.filter((value) => isSameDay(new Date(value.createdAt), new Date(data.createdAt)));
           // Net worth = CAD_balance + (BTC_balance * BTC_CAD_rate) + (ETH_balance * ETH_CAD_rate)
+          const btcRate = realTimeData && actualBTCValOnDate.length > 0 ? actualBTCValOnDate[0].midMarketRate : rates.BTC_CAD;
+          const ethRate = realTimeData && actualETHValOnDate.length > 0 ? actualETHValOnDate[0].midMarketRate : rates.ETH_CAD;
           const dataValuePoint = {
             actualDate: new Date(data.createdAt),
             createdAt: format(new Date(data.createdAt), 'MMM dd, yyyy'),
-            netWorth: CAD_NetWorth(lastCADAmount, lastBTCAmount, rates.BTC_CAD, lastETHAmount, rates.ETH_CAD),
+            netWorth: CAD_NetWorth(lastCADAmount, lastBTCAmount, btcRate, lastETHAmount, ethRate),
           }
           netWorthData.push(dataValuePoint);
-          // netWorthData = netWorthData.filter((data) => !isSameDay(data.actualDate, new Date(data.createdAt)));
 
         } else if (data.direction === "credit") {
           // ADD
@@ -157,15 +126,18 @@ const Charts = () => {
               break;
           }
 
+          const actualBTCValOnDate = btcRates.filter((value) => isSameDay(new Date(value.createdAt), new Date(data.createdAt)));
+          const actualETHValOnDate = ethRates.filter((value) => isSameDay(new Date(value.createdAt), new Date(data.createdAt)));
           // Net worth = CAD_balance + (BTC_balance * BTC_CAD_rate) + (ETH_balance * ETH_CAD_rate)
+          const btcRate = realTimeData && actualBTCValOnDate.length > 0 ? actualBTCValOnDate[0].midMarketRate : rates.BTC_CAD;
+          const ethRate = realTimeData && actualETHValOnDate.length > 0 ? actualETHValOnDate[0].midMarketRate : rates.ETH_CAD;
           const dataValuePoint = {
             actualDate: new Date(data.createdAt),
             createdAt: format(new Date(data.createdAt), 'MMM dd, yyyy'),
-            netWorth: CAD_NetWorth(lastCADAmount, lastBTCAmount, rates.BTC_CAD, lastETHAmount, rates.ETH_CAD),
+            netWorth: CAD_NetWorth(lastCADAmount, lastBTCAmount, btcRate, lastETHAmount, ethRate),
           }
 
           netWorthData.push(dataValuePoint);
-          // netWorthData = netWorthData.filter((data) => !isSameDay(data.actualDate, new Date(data.createdAt)));
 
         } else if (data.direction === "debit") {
           // SUBTRACT
@@ -181,17 +153,22 @@ const Charts = () => {
               break;
           }
           // Net worth = CAD_balance + (BTC_balance * BTC_CAD_rate) + (ETH_balance * ETH_CAD_rate)
+          const actualBTCValOnDate = btcRates.filter((value) => isSameDay(new Date(value.createdAt), new Date(data.createdAt)));
+          const actualETHValOnDate = ethRates.filter((value) => isSameDay(new Date(value.createdAt), new Date(data.createdAt)));
+          // Net worth = CAD_balance + (BTC_balance * BTC_CAD_rate) + (ETH_balance * ETH_CAD_rate)
+          const btcRate = realTimeData && actualBTCValOnDate.length > 0 ? actualBTCValOnDate[0].midMarketRate : rates.BTC_CAD;
+          const ethRate = realTimeData && actualETHValOnDate.length > 0 ? actualETHValOnDate[0].midMarketRate : rates.ETH_CAD;
           const dataValuePoint = {
             actualDate: new Date(data.createdAt),
             createdAt: format(new Date(data.createdAt), 'MMM dd, yyyy'),
-            netWorth: CAD_NetWorth(lastCADAmount, lastBTCAmount, rates.BTC_CAD, lastETHAmount, rates.ETH_CAD),
+            netWorth: CAD_NetWorth(lastCADAmount, lastBTCAmount, btcRate, lastETHAmount, ethRate),
           }
           netWorthData.push(dataValuePoint);
         }
       });
 
       const netWorthTransactionHistory = [...netWorthData]
-      
+     
       
       // Convert to data
       const labels = netWorthTransactionHistory.map((val) => val.createdAt)
@@ -227,12 +204,12 @@ const Charts = () => {
       setData(newData);
       dispatch(setCurrentNetWorth(data[data.length - 1]))
     }
-  }, [transactionHistory, rates])
+  }, [transactionHistory, rates, ethRates, btcRates])
 
   return (
     <div className={styles.chartContainer}>
-      <h3>Net Worth</h3>
-      <Line id="netWorthChart" data={data} options={testOptions} />
+      <h3>Net Worth {realTimeData ? "With ACTUAL BTC/ETH Rate Data" : 'With Static Rates'}</h3>
+      <Line id={id} data={data} options={options} />
     </div>
   )
 }
