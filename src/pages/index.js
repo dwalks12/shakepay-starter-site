@@ -10,19 +10,22 @@ import Loading from "../components/Loading";
 const IndexPage = () => {
   const dispatch = useAppDispatch();
   const isLoading = useSelector((state) => selectIsLoading(state));
-  
+  const [loading, setLoading] = useState(false);
   const transactionHistory = useSelector((state) => selectTransactionHistory(state));
   const rates = useSelector((state) => selectRates(state));
   const currentNetWorth = useSelector((state) => selectCurrentNetWorth(state));
+  
   useEffect(() => {
     // Calculate current net worth
     if (rates && transactionHistory) {
+      setLoading(false);
       // const currentNetWorth = CAD_NetWorth()
     }
   }, [rates, transactionHistory])
 
   useEffect(() => {
     // FETCH Info
+    setLoading(true);
     dispatch(fetchShakepayRates());
     dispatch(fetchTransactionHistory());
     dispatch(fetchActualETHRates());
@@ -39,7 +42,7 @@ const IndexPage = () => {
       <div className={styles.graphContainer}>
         <Charts realTimeData />
       </div>
-      {isLoading && (<Loading />)}
+      {(isLoading || loading) && (<Loading />)}
     </main>
   )
 }
