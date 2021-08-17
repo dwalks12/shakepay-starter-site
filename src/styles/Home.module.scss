@@ -1,0 +1,23 @@
+.graphContainer {
+
+}
+
+.homePageContainer {
+  max-width: 1030px;
+  @apply mx-auto w-full;
+  h1 {
+    @apply font-roboto text-center;
+  }
+  p {
+    @apply text-center font-roboto;
+  }
+
+  h3 {
+    @apply font-roboto text-center;
+  }
+
+}
+
+.currency {
+  @apply font-courier font-bold text-4xl;
+}
