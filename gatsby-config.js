@@ -1,6 +1,6 @@
 module.exports = {
     siteMetadata: {
-        siteUrl: `https://shakepay-starter-site.com`,
+        siteUrl: `https://shakepay.netlify.app`,
     },
     plugins: [
         {
