@@ -202,7 +202,10 @@ const Charts = ({ realTimeData = false, id = "netWorthChart" }) => {
         ]
       }
       setData(newData);
-      dispatch(setCurrentNetWorth(data[data.length - 1]))
+      if (realTimeData) {
+        // Only set the actual net worth when we have the real data
+        dispatch(setCurrentNetWorth(data[data.length - 1]))
+      }
     }
   }, [transactionHistory, rates, ethRates, btcRates])
 
